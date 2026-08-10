@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Digital Logic Lab — Sadia Afrin</title>
-<meta name="description" content="Three interactive digital-logic demonstrations: a CMOS inverter at transistor level, a two-input logic gate bench, and a 4-bit counter driving a seven-segment decoder.">
+<meta name="description" content="Seven interactive electronics demonstrations: MOSFET I–V curves, a CMOS inverter, a logic gate bench, a Karnaugh map minimiser, a 4-bit ripple-carry adder, a D flip-flop and a 4-bit counter with seven-segment decoder.">
 <meta name="author" content="Sadia Afrin">
 <meta name="color-scheme" content="light">
 
@@ -12,7 +12,7 @@
 
 <meta property="og:type" content="article">
 <meta property="og:title" content="Digital Logic Lab — Sadia Afrin">
-<meta property="og:description" content="A CMOS inverter, a logic gate bench and a 4-bit counter — all live and interactive.">
+<meta property="og:description" content="Seven live electronics demos, from a single transistor's I–V curve up to a counter that displays itself.">
 <meta property="og:locale" content="en_GB">
 <meta name="twitter:card" content="summary">
 
@@ -30,8 +30,12 @@
 <nav class="rail" aria-label="Sections">
   <a class="rail-die" href="index.html" aria-label="Back to the portfolio">SA</a>
   <div class="rail-bus" id="bus">
+    <a class="pin" href="#mosfet"><span class="pin-bar"></span><span class="pin-label">MOSFET</span></a>
     <a class="pin" href="#inverter"><span class="pin-bar"></span><span class="pin-label">Inverter</span></a>
     <a class="pin" href="#gates"><span class="pin-bar"></span><span class="pin-label">Gates</span></a>
+    <a class="pin" href="#karnaugh"><span class="pin-bar"></span><span class="pin-label">Karnaugh map</span></a>
+    <a class="pin" href="#adder"><span class="pin-bar"></span><span class="pin-label">Adder</span></a>
+    <a class="pin" href="#flipflop"><span class="pin-bar"></span><span class="pin-label">Flip-flop</span></a>
     <a class="pin" href="#counter"><span class="pin-bar"></span><span class="pin-label">Counter</span></a>
   </div>
   <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch to dark theme">
@@ -45,8 +49,12 @@
 <div class="topbar">
   <a class="topbar-name" href="index.html">&#8592; S. Afrin</a>
   <nav class="topbar-links" aria-label="Sections">
+    <a href="#mosfet">MOSFET</a>
     <a href="#inverter">Inverter</a>
     <a href="#gates">Gates</a>
+    <a href="#karnaugh">Karnaugh</a>
+    <a href="#adder">Adder</a>
+    <a href="#flipflop">Flip-flop</a>
     <a href="#counter">Counter</a>
   </nav>
   <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch to dark theme">
@@ -67,16 +75,43 @@
   <div class="wrap">
     <div class="lab-intro">
       <div class="block-head rv" style="margin-bottom:0">
-        <p class="eyebrow">Digital logic lab <span class="dim">· interactive</span></p>
-        <h1 id="lab-h">Three things worth building by hand</h1>
+        <p class="eyebrow">Digital logic lab <span class="dim">· seven live demos</span></p>
+        <h1 id="lab-h">From one transistor to a counter that displays itself</h1>
       </div>
-      <p class="block-note rv" style="--d:80ms">Everything in a modern chip reduces to these: a transistor pair that inverts, a gate that decides, and a register that counts. All three below are live — toggle them.</p>
+      <p class="block-note rv" style="--d:80ms">Each bench below sits one level above the last: a device, a pair of devices, a gate, the algebra that minimises gates, arithmetic, memory, and finally a register that counts. All of them are live — toggle them.</p>
     </div>
 
     <div class="lab">
 
-      <!-- 1 — CMOS inverter -->
-      <div class="macro bench rv" id="inverter">
+      <!-- 1 — MOSFET I–V -->
+      <div class="macro bench rv" id="mosfet">
+        <div class="bench-head">
+          <h3>MOSFET characteristics</h3>
+          <p class="bench-tag">Device level</p>
+        </div>
+        <p class="lead">Drain current against drain–source voltage for an n-channel device. Below threshold nothing flows; past pinch-off the current flattens out and the transistor behaves like a current source — which is exactly what makes amplification possible.</p>
+
+        <canvas class="iv-canvas" id="iv" aria-hidden="true"></canvas>
+
+        <div class="slider-row">
+          <label for="vgs">V<sub>GS</sub></label>
+          <input class="range" type="range" id="vgs" min="0" max="5" step="0.1" value="3">
+          <span class="lvl"><b id="vgs-v">3.0</b>V</span>
+        </div>
+        <div class="slider-row">
+          <label for="vds">V<sub>DS</sub></label>
+          <input class="range" type="range" id="vds" min="0" max="5" step="0.1" value="3">
+          <span class="lvl"><b id="vds-v">3.0</b>V</span>
+        </div>
+        <div class="ctl">
+          <span class="region" id="iv-region">Saturation</span>
+          <span class="lvl">I<sub>D</sub> <b id="id-v">0.00</b>mA</span>
+          <span class="lvl">V<sub>TH</sub> <b>1.0</b>V</span>
+        </div>
+      </div>
+
+      <!-- 2 — CMOS inverter -->
+      <div class="macro bench rv" id="inverter" style="--d:80ms">
         <div class="bench-head">
           <h3>CMOS inverter</h3>
           <p class="bench-tag">Transistor level</p>
@@ -143,8 +178,8 @@
         </table>
       </div>
 
-      <!-- 2 — gate bench -->
-      <div class="macro bench rv" id="gates" style="--d:100ms">
+      <!-- 3 — gate bench -->
+      <div class="macro bench rv" id="gates">
         <div class="bench-head">
           <h3>Logic gate bench</h3>
           <p class="bench-tag">Gate level</p>
@@ -198,13 +233,142 @@
         </table>
       </div>
 
-      <!-- 3 — counter -->
+      <!-- 4 — Karnaugh map -->
+      <div class="macro bench rv" id="karnaugh" style="--d:80ms">
+        <div class="bench-head">
+          <h3>Karnaugh map</h3>
+          <p class="bench-tag">Boolean minimisation</p>
+        </div>
+        <p class="lead">Click cells to set the minterms of a four-variable function. The expression underneath is genuinely minimised — prime implicants by Quine–McCluskey, then an essential-first cover — so it is the same answer you would reach grouping by hand.</p>
+
+        <div class="kmap-stage">
+          <div class="kmap" id="kmap" role="group" aria-label="Four-variable Karnaugh map">
+            <span class="kmap-h">AB\CD</span>
+            <span class="kmap-h">00</span><span class="kmap-h">01</span><span class="kmap-h">11</span><span class="kmap-h">10</span>
+
+            <span class="kmap-h">00</span>
+            <button class="kcell" type="button" data-m="0" aria-pressed="false" aria-label="Minterm 0">0</button>
+            <button class="kcell" type="button" data-m="1" aria-pressed="false" aria-label="Minterm 1">0</button>
+            <button class="kcell" type="button" data-m="3" aria-pressed="false" aria-label="Minterm 3">0</button>
+            <button class="kcell" type="button" data-m="2" aria-pressed="false" aria-label="Minterm 2">0</button>
+
+            <span class="kmap-h">01</span>
+            <button class="kcell" type="button" data-m="4" aria-pressed="false" aria-label="Minterm 4">0</button>
+            <button class="kcell" type="button" data-m="5" aria-pressed="false" aria-label="Minterm 5">0</button>
+            <button class="kcell" type="button" data-m="7" aria-pressed="false" aria-label="Minterm 7">0</button>
+            <button class="kcell" type="button" data-m="6" aria-pressed="false" aria-label="Minterm 6">0</button>
+
+            <span class="kmap-h">11</span>
+            <button class="kcell" type="button" data-m="12" aria-pressed="false" aria-label="Minterm 12">0</button>
+            <button class="kcell" type="button" data-m="13" aria-pressed="false" aria-label="Minterm 13">0</button>
+            <button class="kcell" type="button" data-m="15" aria-pressed="false" aria-label="Minterm 15">0</button>
+            <button class="kcell" type="button" data-m="14" aria-pressed="false" aria-label="Minterm 14">0</button>
+
+            <span class="kmap-h">10</span>
+            <button class="kcell" type="button" data-m="8" aria-pressed="false" aria-label="Minterm 8">0</button>
+            <button class="kcell" type="button" data-m="9" aria-pressed="false" aria-label="Minterm 9">0</button>
+            <button class="kcell" type="button" data-m="11" aria-pressed="false" aria-label="Minterm 11">0</button>
+            <button class="kcell" type="button" data-m="10" aria-pressed="false" aria-label="Minterm 10">0</button>
+          </div>
+
+          <div class="kmap-side">
+            <p class="chart-note">Minimised sum of products</p>
+            <p class="kexpr" id="kexpr" aria-live="polite">F = <b>0</b></p>
+            <button class="fbtn" type="button" id="kmap-clear" style="align-self:flex-start">Clear map</button>
+            <p class="chart-note">A prime (′) marks a complemented variable. Adjacent cells differ in one variable only — that is the whole trick of the Gray-code ordering along each edge.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 — 4-bit adder -->
+      <div class="macro bench rv" id="adder">
+        <div class="bench-head">
+          <h3>4-bit ripple-carry adder</h3>
+          <p class="bench-tag">Arithmetic</p>
+        </div>
+        <p class="lead">Toggle the bits of A and B. Each stage's carry feeds the next, which is why this adder is simple to build and slow to settle — the worst case has to ripple all the way from bit 0 to the carry out.</p>
+
+        <div class="adder">
+          <div class="adder-row">
+            <span class="adder-lbl">Carry</span>
+            <span class="carry" data-c="4">0</span>
+            <span class="carry" data-c="3">0</span>
+            <span class="carry" data-c="2">0</span>
+            <span class="carry" data-c="1">0</span>
+            <span></span>
+          </div>
+          <div class="adder-row">
+            <span class="adder-lbl">A</span>
+            <button class="bit" type="button" data-a="3" aria-pressed="false" aria-label="A bit 3"><b>0</b><span>A3</span></button>
+            <button class="bit" type="button" data-a="2" aria-pressed="false" aria-label="A bit 2"><b>0</b><span>A2</span></button>
+            <button class="bit" type="button" data-a="1" aria-pressed="false" aria-label="A bit 1"><b>0</b><span>A1</span></button>
+            <button class="bit" type="button" data-a="0" aria-pressed="false" aria-label="A bit 0"><b>0</b><span>A0</span></button>
+            <span class="adder-sum" id="ad-a">0</span>
+          </div>
+          <div class="adder-row">
+            <span class="adder-lbl">B</span>
+            <button class="bit" type="button" data-b="3" aria-pressed="false" aria-label="B bit 3"><b>0</b><span>B3</span></button>
+            <button class="bit" type="button" data-b="2" aria-pressed="false" aria-label="B bit 2"><b>0</b><span>B2</span></button>
+            <button class="bit" type="button" data-b="1" aria-pressed="false" aria-label="B bit 1"><b>0</b><span>B1</span></button>
+            <button class="bit" type="button" data-b="0" aria-pressed="false" aria-label="B bit 0"><b>0</b><span>B0</span></button>
+            <span class="adder-sum" id="ad-b">0</span>
+          </div>
+          <div class="adder-row">
+            <span class="adder-lbl">Sum</span>
+            <span class="bit" data-s="3"><b>0</b><span>S3</span></span>
+            <span class="bit" data-s="2"><b>0</b><span>S2</span></span>
+            <span class="bit" data-s="1"><b>0</b><span>S1</span></span>
+            <span class="bit" data-s="0"><b>0</b><span>S0</span></span>
+            <span></span>
+          </div>
+          <p class="adder-eq" id="ad-eq" aria-live="polite">0 + 0 = 0</p>
+        </div>
+      </div>
+
+      <!-- 6 — D flip-flop -->
+      <div class="macro bench rv" id="flipflop" style="--d:80ms">
+        <div class="bench-head">
+          <h3>D flip-flop</h3>
+          <p class="bench-tag">Sequential</p>
+        </div>
+        <p class="lead">The first circuit here with memory. Q copies D, but only on the rising edge of the clock — change D between edges and nothing happens, which is what makes a whole chip able to move in step.</p>
+
+        <svg class="dff-svg" viewBox="0 0 280 130" role="img" aria-label="D flip-flop symbol with D input, clock input, and Q and Q-bar outputs">
+          <path class="gwire" id="dff-wd" d="M18 42 H86"/>
+          <path class="gwire" id="dff-wc" d="M18 92 H86"/>
+          <rect class="dff-body" x="86" y="18" width="94" height="94" rx="6"/>
+          <path class="dff-clk" d="M86 84 L100 92 L86 100"/>
+          <text class="slab" x="106" y="46">D</text>
+          <text class="slab" x="106" y="96">CLK</text>
+          <text class="slab" x="152" y="46">Q</text>
+          <text class="slab" x="146" y="96">Q</text>
+          <path class="dff-clk" d="M146 86 H160" stroke-width="1.4"/>
+          <path class="gwire" id="dff-wq" d="M180 42 H248"/>
+          <path class="gwire" d="M180 92 H248"/>
+          <text class="slab-b" x="6" y="36">D</text>
+          <text class="slab-b" x="2" y="86">CLK</text>
+          <text class="slab-b" x="254" y="36">Q</text>
+          <text class="slab-b" x="254" y="86">Q</text>
+        </svg>
+
+        <div class="ctl">
+          <button class="tgl" type="button" id="dff-d" aria-pressed="false" style="flex:0 0 auto;padding:.5rem 1rem">D<b id="dff-dv">0</b></button>
+          <button class="btn" type="button" id="dff-pulse">Pulse clock</button>
+          <button class="fbtn" type="button" id="dff-run" aria-pressed="true">Pause clock</button>
+          <span class="lvl">Q <b id="dff-q">0</b></span>
+          <span class="lvl">Q&#772; <b id="dff-qb" class="hi">1</b></span>
+        </div>
+
+        <canvas class="wave" id="dff-wave" style="height:118px" aria-hidden="true"></canvas>
+      </div>
+
+      <!-- 7 — counter -->
       <div class="macro bench bench-wide rv" id="counter">
         <div class="bench-head">
           <h3>4-bit counter and seven-segment decoder</h3>
           <p class="bench-tag">Register transfer level</p>
         </div>
-        <p class="lead">Four flip-flops hold a number; a decoder turns those four bits into the seven segments that display it. Sixteen states, then it wraps — the same counting and decoding a Verilog module describes in a dozen lines.</p>
+        <p class="lead">Four flip-flops like the one above hold a number; a decoder turns those four bits into the seven segments that display it. Sixteen states, then it wraps — the same counting and decoding a Verilog module describes in a dozen lines.</p>
 
         <div class="count-stage">
           <svg class="seg-svg" viewBox="0 0 100 152" role="img" aria-label="Seven-segment display showing the current counter value">

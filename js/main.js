@@ -159,14 +159,12 @@
     scan();
   })();
 
-  /* -------------------------------------------- band seams & journey track */
+  /* ------------------------------------------------------------ band seams */
   (function draws() {
     /* each section's top rule inks itself in as the band is reached */
     $$('.block').forEach(function (b) {
       onView(b, function () { b.classList.add('on'); }, 0.03);
     });
-    var track = $('.journey-track');
-    if (track) onView(track, function () { track.style.setProperty('--draw', '100%'); }, 0.15);
   })();
 
   /* ------------------------------------------------------- pointer probe */
@@ -628,7 +626,8 @@
                'abcdefg', 'abcdfg', 'abcefg', 'cdefg', 'adef', 'bcdeg', 'adefg', 'aefg'];
     var segs = {};
     'abcdefg'.split('').forEach(function (k) { segs[k] = $('#seg-' + k); });
-    var bits = $$('.bit');
+    /* scoped to this bench — the adder uses .bit too */
+    var bits = $$('#counter .bits .bit');
     var hexOut = $('#cnt-hex'), decOut = $('#cnt-dec');
     var playBtn = $('#cnt-play'), stepBtn = $('#cnt-step'), zeroBtn = $('#cnt-zero');
 
@@ -666,6 +665,377 @@
     if (reduce) { running = false; playBtn.setAttribute('aria-pressed', 'false'); playBtn.textContent = 'Run'; }
     render();
     start();
+  })();
+
+  /* -------------------------------------------- MOSFET I–V characteristics */
+  (function mosfet() {
+    var cv = $('#iv');
+    if (!cv) return;
+    var ctx = cv.getContext && cv.getContext('2d');
+    if (!ctx) return;
+
+    var sg = $('#vgs'), sd = $('#vds');
+    var outG = $('#vgs-v'), outD = $('#vds-v'), outI = $('#id-v'), outR = $('#iv-region');
+    var VTH = 1.0, K = 0.42;          /* illustrative n-channel square-law device */
+    var VMAX = 5, IMAX = K * (VMAX - VTH) * (VMAX - VTH);
+
+    function drain(vgs, vds) {
+      if (vgs <= VTH) return 0;
+      var ov = vgs - VTH;
+      return vds < ov ? K * (2 * ov * vds - vds * vds) : K * ov * ov;
+    }
+    function region(vgs, vds) {
+      if (vgs <= VTH) return 'Cut-off';
+      return vds < (vgs - VTH) ? 'Triode' : 'Saturation';
+    }
+
+    var cw = 0, ch = 0;
+    function draw() {
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      var W = cv.clientWidth, H = 210;
+      if (!W) return;
+      if (cw !== W || ch !== dpr) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cw = W; ch = dpr; }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      var L = 38, Rr = 10, T = 12, B = 26;
+      var pw = W - L - Rr, phh = H - T - B;
+      var X = function (v) { return L + (v / VMAX) * pw; };
+      var Y = function (i) { return T + phh - (i / IMAX) * phh; };
+
+      var trace = token('--trace') || '#E8DCE2';
+      var trace2 = token('--trace-2') || '#F2E9ED';
+      var resist = token('--resist') || '#BE3468';
+      var graph = token('--graphite') || '#6C6066';
+      ctx.font = '500 9px ' + (token('--mono') || 'monospace');
+
+      /* grid */
+      ctx.strokeStyle = trace2; ctx.lineWidth = 1;
+      for (var g = 1; g <= 5; g++) {
+        ctx.beginPath(); ctx.moveTo(X(g), T); ctx.lineTo(X(g), T + phh); ctx.stroke();
+      }
+      for (var q = 1; q <= 4; q++) {
+        var yy = T + phh - (q / 4) * phh;
+        ctx.beginPath(); ctx.moveTo(L, yy); ctx.lineTo(L + pw, yy); ctx.stroke();
+      }
+
+      /* axes */
+      ctx.strokeStyle = trace; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, T + phh); ctx.lineTo(L + pw, T + phh); ctx.stroke();
+      ctx.fillStyle = graph;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (var t = 0; t <= 5; t++) ctx.fillText(String(t), X(t), T + phh + 6);
+      ctx.fillText('Vds (V)', L + pw / 2, T + phh + 16);
+      ctx.save();
+      ctx.translate(10, T + phh / 2); ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Id (mA)', 0, 0);
+      ctx.restore();
+
+      var live = parseFloat(sg.value);
+
+      /* the family, then the selected curve on top */
+      function curve(vgs, active) {
+        ctx.beginPath();
+        for (var v = 0; v <= VMAX + 0.001; v += 0.05) {
+          var x = X(v), y = Y(drain(vgs, v));
+          if (v === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = active ? resist : trace;
+        ctx.lineWidth = active ? 2.2 : 1.2;
+        ctx.stroke();
+        if (!active) {
+          ctx.fillStyle = graph;
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(vgs.toFixed(1) + 'V', X(VMAX) - 26, Y(drain(vgs, VMAX)) - 7);
+        }
+      }
+      [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].forEach(function (v) { if (Math.abs(v - live) > 0.24) curve(v, false); });
+      curve(live, true);
+
+      /* the locus Vds = Vgs − Vth, where triode gives way to saturation */
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = graph; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (var s = 0; s <= VMAX - VTH; s += 0.05) {
+        var xx = X(s), yy2 = Y(K * s * s);
+        if (s === 0) ctx.moveTo(xx, yy2); else ctx.lineTo(xx, yy2);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      /* operating point */
+      var vd = parseFloat(sd.value), idv = drain(live, vd);
+      ctx.fillStyle = resist;
+      ctx.beginPath(); ctx.arc(X(vd), Y(idv), 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = resist; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(X(vd), Y(idv)); ctx.lineTo(X(vd), T + phh); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(X(vd), Y(idv)); ctx.lineTo(L, Y(idv)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function sync() {
+      var vg = parseFloat(sg.value), vd = parseFloat(sd.value);
+      outG.textContent = vg.toFixed(1);
+      outD.textContent = vd.toFixed(1);
+      outI.textContent = drain(vg, vd).toFixed(2);
+      outR.textContent = region(vg, vd);
+      draw();
+    }
+    sg.addEventListener('input', sync);
+    sd.addEventListener('input', sync);
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(draw, 160); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+    sync();
+  })();
+
+  /* ------------------------------------- Karnaugh map with a real minimiser */
+  (function kmap() {
+    var grid = $('#kmap');
+    if (!grid) return;
+    var out = $('#kexpr');
+    var cells = $$('.kcell', grid);
+    var ones = [];
+
+    /* Quine–McCluskey: combine adjacent implicants until nothing merges,
+       then cover the minterms with essential primes plus a greedy remainder. */
+    function minimise(list) {
+      if (!list.length) return '0';
+      if (list.length === 16) return '1';
+      var current = list.map(function (m) { return { bits: m, mask: 0 }; });
+      var primes = [];
+      while (current.length) {
+        var next = [], used = [];
+        for (var i = 0; i < current.length; i++) used[i] = false;
+        for (var a = 0; a < current.length; a++) {
+          for (var b = a + 1; b < current.length; b++) {
+            if (current[a].mask !== current[b].mask) continue;
+            var diff = current[a].bits ^ current[b].bits;
+            if (!diff || (diff & (diff - 1))) continue;      /* must differ in exactly one bit */
+            used[a] = used[b] = true;
+            var nb = current[a].bits & ~diff, nm = current[a].mask | diff;
+            if (!next.some(function (x) { return x.bits === nb && x.mask === nm; })) next.push({ bits: nb, mask: nm });
+          }
+        }
+        for (var k = 0; k < current.length; k++) {
+          if (!used[k] && !primes.some(function (p) { return p.bits === current[k].bits && p.mask === current[k].mask; })) primes.push(current[k]);
+        }
+        current = next;
+      }
+
+      var covers = function (p, m) { return (m & ~p.mask) === p.bits; };
+      var chosen = [];
+      list.forEach(function (m) {
+        var c = primes.filter(function (p) { return covers(p, m); });
+        if (c.length === 1 && chosen.indexOf(c[0]) < 0) chosen.push(c[0]);
+      });
+      var left = list.filter(function (m) { return !chosen.some(function (p) { return covers(p, m); }); });
+      while (left.length) {
+        var best = null, bestN = 0;
+        primes.forEach(function (p) {
+          if (chosen.indexOf(p) >= 0) return;
+          var n = left.filter(function (m) { return covers(p, m); }).length;
+          if (n > bestN) { bestN = n; best = p; }
+        });
+        if (!best) break;
+        chosen.push(best);
+        left = left.filter(function (m) { return !covers(best, m); });
+      }
+      return chosen.map(term).join(' + ');
+    }
+
+    function term(p) {
+      var names = ['A', 'B', 'C', 'D'], s = '';
+      for (var i = 0; i < 4; i++) {
+        var bit = 3 - i;
+        if (p.mask & (1 << bit)) continue;
+        s += names[i] + ((p.bits & (1 << bit)) ? '' : '′');
+      }
+      return s || '1';
+    }
+
+    function render() {
+      ones = cells.filter(function (c) { return c.classList.contains('one'); })
+                  .map(function (c) { return parseInt(c.getAttribute('data-m'), 10); })
+                  .sort(function (x, y) { return x - y; });
+      out.innerHTML = 'F = <b></b>';
+      out.querySelector('b').textContent = minimise(ones);
+    }
+
+    cells.forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = c.classList.toggle('one');
+        c.textContent = on ? '1' : '0';
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        render();
+      });
+    });
+    var clr = $('#kmap-clear');
+    if (clr) clr.addEventListener('click', function () {
+      cells.forEach(function (c) { c.classList.remove('one'); c.textContent = '0'; c.setAttribute('aria-pressed', 'false'); });
+      render();
+    });
+    render();
+  })();
+
+  /* --------------------------------------------- 4-bit ripple-carry adder */
+  (function adder() {
+    var host = $('#adder');
+    if (!host) return;
+    var aBits = $$('[data-a]', host), bBits = $$('[data-b]', host);
+    var sumCells = $$('[data-s]', host), carryCells = $$('[data-c]', host);
+    var eq = $('#ad-eq'), aOut = $('#ad-a'), bOut = $('#ad-b');
+
+    function val(list, attr) {
+      var n = 0;
+      list.forEach(function (el) {
+        if (el.classList.contains('hi')) n |= (1 << parseInt(el.getAttribute(attr), 10));
+      });
+      return n;
+    }
+    function render() {
+      var A = val(aBits, 'data-a'), B = val(bBits, 'data-b');
+      var carry = 0, sum = 0, carries = [];
+      for (var i = 0; i < 4; i++) {
+        var a = (A >> i) & 1, b = (B >> i) & 1;
+        carries[i] = carry;                       /* carry into stage i */
+        var s = a ^ b ^ carry;
+        carry = (a & b) | (carry & (a ^ b));
+        sum |= s << i;
+      }
+      sumCells.forEach(function (el) {
+        var i = parseInt(el.getAttribute('data-s'), 10);
+        var v = (sum >> i) & 1;
+        el.classList.toggle('hi', !!v);
+        el.querySelector('b').textContent = String(v);
+      });
+      carryCells.forEach(function (el) {
+        var i = parseInt(el.getAttribute('data-c'), 10);
+        var v = i === 4 ? carry : carries[i];
+        el.classList.toggle('hi', !!v);
+        el.textContent = String(v);
+      });
+      aOut.textContent = String(A);
+      bOut.textContent = String(B);
+      eq.textContent = A + ' + ' + B + ' = ' + (A + B) + (carry ? '  (carry out)' : '');
+    }
+    aBits.concat(bBits).forEach(function (el) {
+      el.addEventListener('click', function () {
+        var on = el.classList.toggle('hi');
+        el.querySelector('b').textContent = on ? '1' : '0';
+        el.setAttribute('aria-pressed', on ? 'true' : 'false');
+        render();
+      });
+    });
+    render();
+  })();
+
+  /* --------------------------------------------------------- D flip-flop */
+  (function dff() {
+    var cv = $('#dff-wave');
+    if (!cv) return;
+    var ctx = cv.getContext && cv.getContext('2d');
+    if (!ctx) return;
+
+    var dBtn = $('#dff-d'), runBtn = $('#dff-run'), pulseBtn = $('#dff-pulse');
+    var qOut = $('#dff-q'), qbOut = $('#dff-qb'), dOut = $('#dff-dv');
+    var wD = $('#dff-wd'), wQ = $('#dff-wq'), wC = $('#dff-wc');
+
+    var D = 0, Q = 0, CLK = 0, running = !reduce, timer = 0, sampler = 0;
+    var HIST = 160, hist = [];
+    for (var i = 0; i < HIST; i++) hist.push({ c: 0, d: 0, q: 0 });
+
+    function paint() {
+      dOut.textContent = String(D);
+      qOut.textContent = String(Q);
+      qbOut.textContent = String(Q ? 0 : 1);
+      dOut.classList.toggle('hi', !!D);
+      qOut.classList.toggle('hi', !!Q);
+      qbOut.classList.toggle('hi', !Q);
+      dBtn.setAttribute('aria-pressed', D ? 'true' : 'false');
+      if (wD) wD.classList.toggle('hi', !!D);
+      if (wQ) wQ.classList.toggle('hi', !!Q);
+      if (wC) wC.classList.toggle('hi', !!CLK);
+    }
+    function edge() { CLK = 1; Q = D; paint(); setTimeout(function () { CLK = 0; paint(); }, 240); }
+
+    var cw = 0, chh = 0;
+    function draw() {
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      var W = cv.clientWidth, H = 118;
+      if (!W) return;
+      if (cw !== W || chh !== dpr) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cw = W; chh = dpr; }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      var pad = 30, rowH = 26, gapY = 8;
+      var trace = token('--trace') || '#E8DCE2';
+      var resist = token('--resist') || '#BE3468';
+      var graph = token('--graphite') || '#6C6066';
+      var m1 = token('--m1') || '#2E6389';
+      ctx.font = '500 10px ' + (token('--mono') || 'monospace');
+      ctx.textBaseline = 'middle';
+
+      [['CLK', 'c', m1], ['D', 'd', graph], ['Q', 'q', resist]].forEach(function (row, idx) {
+        var key = row[1], col = row[2];
+        var top = 6 + idx * (rowH + gapY), bot = top + rowH;
+        ctx.fillStyle = graph;
+        ctx.textAlign = 'left';
+        ctx.fillText(row[0], 2, (top + bot) / 2);
+        ctx.strokeStyle = trace; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad, bot + 0.5); ctx.lineTo(W, bot + 0.5); ctx.stroke();
+        ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.lineJoin = 'miter';
+        ctx.beginPath();
+        var step = (W - pad) / (HIST - 1), prev = null;
+        for (var i = 0; i < HIST; i++) {
+          var x = pad + i * step, y = hist[i][key] ? top + 3 : bot - 3;
+          if (prev === null) ctx.moveTo(x, y); else { ctx.lineTo(x, prev); ctx.lineTo(x, y); }
+          prev = y;
+        }
+        ctx.stroke();
+      });
+    }
+
+    function sample() {
+      hist.push({ c: CLK, d: D, q: Q });
+      if (hist.length > HIST) hist.shift();
+      if (!document.hidden) draw();
+    }
+    function start() { clearInterval(timer); if (running && !reduce) timer = setInterval(edge, 1300); }
+
+    dBtn.addEventListener('click', function () { D = D ? 0 : 1; paint(); });
+    pulseBtn.addEventListener('click', function () {
+      if (running) { running = false; runBtn.setAttribute('aria-pressed', 'false'); runBtn.textContent = 'Run clock'; clearInterval(timer); }
+      edge();
+    });
+    runBtn.addEventListener('click', function () {
+      running = !running;
+      runBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
+      runBtn.textContent = running ? 'Pause clock' : 'Run clock';
+      start();
+    });
+
+    paint();
+    if (reduce) {
+      running = false;
+      runBtn.setAttribute('aria-pressed', 'false');
+      runBtn.textContent = 'Run clock';
+      /* a static but truthful trace: Q takes D's value at each rising edge */
+      hist = [];
+      var qHold = 0, prevC = 0;
+      for (var j = 0; j < HIST; j++) {
+        var c = Math.floor(j / 10) % 2, d = Math.floor(j / 34) % 2;
+        if (c && !prevC) qHold = d;
+        prevC = c;
+        hist.push({ c: c, d: d, q: qHold });
+      }
+      draw();
+    } else {
+      sampler = setInterval(sample, 60);
+      start();
+    }
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(draw, 160); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   })();
 
 })();

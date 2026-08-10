@@ -103,8 +103,20 @@ comment banners (`<!-- ===== RESEARCH ===== -->` and so on).
 
 ## A note on the logic lab
 
-The three demos are real, not decorative. The inverter shows one PMOS and one NMOS
-conducting in strict alternation, with a live waveform of A and Y. The gate bench draws
-the correct IEEE symbol for each of the six gates — including the inversion bubble on
-NAND, NOR and XNOR — and recomputes the truth table as you switch. The counter is four
-bits feeding a seven-segment decoder, wrapping at sixteen states.
+The seven demos are real, not decorative, and each sits one level above the last.
+
+1. **MOSFET characteristics** — square-law n-channel model, Vth = 1 V. Both Vgs and Vds
+   are adjustable; the operating point tracks across the curve family and the region
+   readout switches between cut-off, triode and saturation at the correct boundary.
+2. **CMOS inverter** — one PMOS and one NMOS conducting in strict alternation, with a
+   live waveform of A and Y.
+3. **Logic gate bench** — the correct IEEE symbol for each of six gates, including the
+   inversion bubble on NAND, NOR and XNOR, with the truth table recomputed on switch.
+4. **Karnaugh map** — a real minimiser: prime implicants by Quine–McCluskey, then an
+   essential-first cover with a greedy remainder. Verified exhaustively against all
+   65 536 possible four-variable functions.
+5. **4-bit ripple-carry adder** — full-adder chain with the carry into each stage shown;
+   verified against all 256 input pairs.
+6. **D flip-flop** — edge-triggered, so Q only follows D on a clock rising edge. Three
+   channel waveform: CLK, D, Q.
+7. **4-bit counter and seven-segment decoder** — sixteen states, then it wraps.
