@@ -10,12 +10,20 @@ open `index.html` in a browser and it works.
 ## Files
 
 ```
-index.html          markup and content — every section is here
+index.html          the portfolio — every section except the lab
+lab.html            the Digital Logic Lab, reached from the chip card in About
 css/fonts.css       the six IBM Plex faces, embedded as base64 woff2
-css/styles.css      design tokens, layout, and all CSS animation
-js/main.js          reveals, canvas, charts, and the three logic-lab demos
+css/styles.css      design tokens, layout, and all CSS animation — shared by both pages
+js/main.js          reveals, canvas, charts, and the three logic-lab demos — shared by both pages
 Sadia_CV.pdf        linked by the "Curriculum vitae" / "Download CV" buttons
+.nojekyll           tells GitHub Pages to serve the files verbatim
 ```
+
+Both pages load the same stylesheet and the same script. Each JavaScript module checks
+for its own markup first and exits quietly when it isn't there, so the lab demos simply
+don't run on the portfolio page and the publication filter doesn't run on the lab page.
+The section navigation reads its targets from the nav links themselves, which is why one
+script drives two different navigations without a per-page list.
 
 ## Deploying to GitHub Pages
 
@@ -35,11 +43,17 @@ Nothing here needs Jekyll, a bundler, or an action.
 | 2 | Profile | Positioning prose, three research domains, animated die illustration |
 | 3 | Research | Impact panel, two charts, filterable list of all six publications |
 | 4 | Projects | Both design projects, each with an animated system diagram |
-| 5 | Digital logic lab | Three interactive demos — inverter, gate bench, 4-bit counter |
-| 6 | Toolchain | HDL, EDA, programming and core competencies |
-| 7 | Teaching | Three roles plus the Control Systems course taught |
-| 8 | Journey | 2018–2026 timeline, degree records, honours, IELTS bands |
-| 9 | Contact | Every channel, plus referees |
+| 5 | Interests | The three research domains as cards |
+| 6 | Experience | The three roles on a timeline |
+| 7 | Courses | Control Systems, taught as a Student Tutor |
+| 8 | Education | 2018–2026 track plus degree cards with GPA dials |
+| 9 | Skills | HDL, EDA, programming, tools, core competencies |
+| 10 | Achievements | VC's List, Dean's List, IELTS bands |
+| 11 | Contact | Every channel, plus referees |
+
+`lab.html` holds the Digital Logic Lab — three interactive demos (CMOS inverter, gate
+bench, 4-bit counter). It is reached from the animated chip card in the Profile section
+and from the "Logic lab" pin in the navigation, and links back from its breadcrumb.
 
 ## Design notes
 

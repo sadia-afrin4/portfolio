@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Logic Lab — Sadia Afrin</title>
+<meta name="description" content="Three interactive digital-logic demonstrations: a CMOS inverter at transistor level, a two-input logic gate bench, and a 4-bit counter driving a seven-segment decoder.">
+<meta name="author" content="Sadia Afrin">
+<meta name="color-scheme" content="light">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23FBF7F9'/><rect x='9.5' y='9.5' width='13' height='13' fill='none' stroke='%23BE3468' stroke-width='2.4'/><g stroke='%23BE3468' stroke-width='2.4' stroke-linecap='round'><path d='M13 4.5v5M19 4.5v5M13 22.5v5M19 22.5v5M4.5 13h5M4.5 19h5M22.5 13h5M22.5 19h5'/></g></svg>">
+
+<meta property="og:type" content="article">
+<meta property="og:title" content="Digital Logic Lab — Sadia Afrin">
+<meta property="og:description" content="A CMOS inverter, a logic gate bench and a 4-bit counter — all live and interactive.">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary">
+
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<script>document.documentElement.className = 'html-js';</script>
+
+<a class="skip" href="#main">Skip to content</a>
+<div class="substrate" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- ===================== PAD-RING RAIL (desktop) ===================== -->
+<nav class="rail" aria-label="Sections">
+  <a class="rail-die" href="index.html" aria-label="Back to the portfolio">SA</a>
+  <div class="rail-bus" id="bus">
+    <a class="pin" href="#inverter"><span class="pin-bar"></span><span class="pin-label">Inverter</span></a>
+    <a class="pin" href="#gates"><span class="pin-bar"></span><span class="pin-label">Gates</span></a>
+    <a class="pin" href="#counter"><span class="pin-bar"></span><span class="pin-label">Counter</span></a>
+  </div>
+  <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch to dark theme">
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z"/></svg>
+  </button>
+  <p class="rail-mark">Digital logic lab</p>
+</nav>
+
+<!-- ===================== TOP BAR (mobile) ===================== -->
+<div class="topbar">
+  <a class="topbar-name" href="index.html">&#8592; S. Afrin</a>
+  <nav class="topbar-links" aria-label="Sections">
+    <a href="#inverter">Inverter</a>
+    <a href="#gates">Gates</a>
+    <a href="#counter">Counter</a>
+  </nav>
+  <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch to dark theme">
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z"/></svg>
+  </button>
+</div>
+
+<div class="shell">
+<main id="main">
+  <div class="wrap">
+    <nav class="crumb" aria-label="Breadcrumb">
+      <a href="index.html">Sadia Afrin</a><span aria-hidden="true">/</span><span>Digital logic lab</span>
+    </nav>
+  </div>
+
+<section class="block" id="lab" aria-labelledby="lab-h">
+  <div class="wrap">
+    <div class="lab-intro">
+      <div class="block-head rv" style="margin-bottom:0">
+        <p class="eyebrow">Digital logic lab <span class="dim">· interactive</span></p>
+        <h1 id="lab-h">Three things worth building by hand</h1>
+      </div>
+      <p class="block-note rv" style="--d:80ms">Everything in a modern chip reduces to these: a transistor pair that inverts, a gate that decides, and a register that counts. All three below are live — toggle them.</p>
+    </div>
+
+    <div class="lab">
+
+      <!-- 1 — CMOS inverter -->
+      <div class="macro bench rv" id="inverter">
+        <div class="bench-head">
+          <h3>CMOS inverter</h3>
+          <p class="bench-tag">Transistor level</p>
+        </div>
+        <p class="lead">One PMOS pulls the output high, one NMOS pulls it low, and never both at once — which is why CMOS burns almost no power while it holds a value.</p>
+
+        <svg class="inv-svg" id="inv-svg" viewBox="0 0 300 300" role="img" aria-labelledby="inv-t inv-d">
+          <title id="inv-t">CMOS inverter schematic</title>
+          <desc id="inv-d">A PMOS transistor connected to VDD and an NMOS transistor connected to ground, sharing an input gate A and an output node Y.</desc>
+
+          <path class="w w-hi" d="M60 30 H240"/>
+          <path class="w w-hi" d="M170 30 V74"/>
+          <text class="slab" x="248" y="34">VDD</text>
+
+          <path class="w" d="M150 270 H190"/>
+          <path class="w" d="M156 276 H184"/>
+          <path class="w" d="M162 282 H172"/>
+          <path class="w" d="M170 226 V270"/>
+          <text class="slab" x="196" y="278">GND</text>
+
+          <path id="w-in" class="w" d="M26 150 H60 M60 90 V210 M60 90 H96 M60 210 H110"/>
+          <circle id="n-in" class="node" cx="60" cy="150" r="4"/>
+          <text class="slab-b" x="14" y="140">A</text>
+
+          <g id="pmos">
+            <circle class="bub" cx="102" cy="90" r="6"/>
+            <path class="w" d="M108 90 H110"/>
+            <path class="gate" d="M110 72 V108"/>
+            <path class="dev" d="M122 68 V80 M122 84 V96 M122 100 V112"/>
+            <path class="dev" d="M122 74 H170 M122 106 H170"/>
+            <text class="slab" x="188" y="94">PMOS</text>
+          </g>
+
+          <g id="nmos">
+            <path class="gate" d="M110 192 V228"/>
+            <path class="dev" d="M122 188 V200 M122 204 V216 M122 220 V232"/>
+            <path class="dev" d="M122 194 H170 M122 226 H170"/>
+            <text class="slab" x="188" y="214">NMOS</text>
+          </g>
+
+          <path id="w-out" class="w" d="M170 106 V194 M170 150 H258"/>
+          <circle id="n-out" class="node" cx="170" cy="150" r="4"/>
+          <text class="slab-b" x="264" y="140">Y</text>
+
+          <circle id="pulse" r="4.5" fill="var(--resist)" opacity="0"></circle>
+        </svg>
+
+        <div class="ctl">
+          <button class="btn" type="button" id="inv-toggle">Toggle input</button>
+          <button class="fbtn" type="button" id="inv-auto" aria-pressed="true">Auto</button>
+          <span class="lvl">A <b id="lvl-a">0</b></span>
+          <span class="lvl">Y <b id="lvl-y" class="hi">1</b></span>
+        </div>
+
+        <canvas class="wave" id="wave" aria-hidden="true"></canvas>
+
+        <table class="tt">
+          <caption>Truth table</caption>
+          <thead><tr><th scope="col">Input A</th><th scope="col">Output Y</th><th scope="col">Conducting</th></tr></thead>
+          <tbody>
+            <tr id="tt0"><td>0</td><td>1</td><td>PMOS</td></tr>
+            <tr id="tt1"><td>1</td><td>0</td><td>NMOS</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2 — gate bench -->
+      <div class="macro bench rv" id="gates" style="--d:100ms">
+        <div class="bench-head">
+          <h3>Logic gate bench</h3>
+          <p class="bench-tag">Gate level</p>
+        </div>
+        <p class="lead">Pick a gate, then toggle its inputs. NAND and NOR are drawn with the inversion bubble because either one alone is functionally complete — you can build any logic from just that gate.</p>
+
+        <div class="gate-pick" role="group" aria-label="Choose a logic gate">
+          <button class="gbtn" type="button" data-gate="AND" aria-pressed="false">AND</button>
+          <button class="gbtn" type="button" data-gate="OR" aria-pressed="false">OR</button>
+          <button class="gbtn" type="button" data-gate="NAND" aria-pressed="true">NAND</button>
+          <button class="gbtn" type="button" data-gate="NOR" aria-pressed="false">NOR</button>
+          <button class="gbtn" type="button" data-gate="XOR" aria-pressed="false">XOR</button>
+          <button class="gbtn" type="button" data-gate="XNOR" aria-pressed="false">XNOR</button>
+        </div>
+
+        <div class="gate-stage">
+          <svg class="gate-svg" viewBox="0 0 220 76" role="img" aria-label="Two-input logic gate symbol with live input and output states">
+            <path class="gwire" id="gw-a" d="M14 25 H34"/>
+            <path class="gwire" id="gw-b" d="M14 51 H34"/>
+            <path class="gbody" id="g-body" d=""/>
+            <path id="g-xor" d="" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+            <circle class="gbody" id="g-bub" cx="96" cy="38" r="5"/>
+            <path class="gwire" id="gw-y" d=""/>
+            <circle class="gled" id="gl-a" cx="8" cy="25" r="5"/>
+            <circle class="gled" id="gl-b" cx="8" cy="51" r="5"/>
+            <circle class="gled" id="gl-y" cx="202" cy="38" r="5"/>
+            <text class="slab" x="2" y="12">A</text>
+            <text class="slab" x="2" y="70">B</text>
+            <text class="slab" x="196" y="18">Y</text>
+          </svg>
+
+          <div>
+            <div class="toggles">
+              <button class="tgl" type="button" id="tgl-a" aria-pressed="false">A<b id="g-va">0</b></button>
+              <button class="tgl" type="button" id="tgl-b" aria-pressed="false">B<b id="g-vb">0</b></button>
+              <span class="tgl" style="cursor:default">Y<b id="g-vy">1</b></span>
+            </div>
+            <p class="chart-note" id="g-expr" aria-live="polite" style="margin-top:.75rem"></p>
+          </div>
+        </div>
+
+        <table class="tt" id="g-tt">
+          <caption>Truth table</caption>
+          <thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">Y</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>1</td><td>0</td><td>1</td></tr>
+            <tr><td>1</td><td>1</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3 — counter -->
+      <div class="macro bench bench-wide rv" id="counter">
+        <div class="bench-head">
+          <h3>4-bit counter and seven-segment decoder</h3>
+          <p class="bench-tag">Register transfer level</p>
+        </div>
+        <p class="lead">Four flip-flops hold a number; a decoder turns those four bits into the seven segments that display it. Sixteen states, then it wraps — the same counting and decoding a Verilog module describes in a dozen lines.</p>
+
+        <div class="count-stage">
+          <svg class="seg-svg" viewBox="0 0 100 152" role="img" aria-label="Seven-segment display showing the current counter value">
+            <polygon class="seg" id="seg-a" points="24,12 76,12 82,18 76,24 24,24 18,18"/>
+            <polygon class="seg" id="seg-b" points="76,24 82,18 88,24 88,64 82,70 76,64"/>
+            <polygon class="seg" id="seg-c" points="76,82 82,76 88,82 88,122 82,128 76,122"/>
+            <polygon class="seg" id="seg-d" points="24,128 76,128 82,134 76,140 24,140 18,134"/>
+            <polygon class="seg" id="seg-e" points="12,82 18,76 24,82 24,122 18,128 12,122"/>
+            <polygon class="seg" id="seg-f" points="12,24 18,18 24,24 24,64 18,70 12,64"/>
+            <polygon class="seg" id="seg-g" points="24,70 76,70 82,76 76,82 24,82 18,76"/>
+          </svg>
+
+          <div>
+            <div class="bits">
+              <span class="bit"><b>0</b><span>Q3</span></span>
+              <span class="bit"><b>0</b><span>Q2</span></span>
+              <span class="bit"><b>0</b><span>Q1</span></span>
+              <span class="bit"><b>0</b><span>Q0</span></span>
+            </div>
+            <div class="ctl" style="margin-top:1rem">
+              <button class="btn" type="button" id="cnt-play" aria-pressed="true">Pause</button>
+              <button class="fbtn" type="button" id="cnt-step">Step</button>
+              <button class="fbtn" type="button" id="cnt-zero">Reset</button>
+              <span class="lvl">DEC <b id="cnt-dec">0</b></span>
+              <span class="lvl">HEX <b id="cnt-hex">0</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="lab-back"><a class="btn" href="index.html">&#8592; Back to the portfolio</a></p>
+  </div>
+</section>
+</main>
+</div>
+
+<button class="to-top" id="to-top" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="js/main.js"></script>
+</body>
+</html>

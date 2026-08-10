@@ -117,8 +117,14 @@
 
   /* ----------------------------------- nav spy, scroll progress, rail scan */
   (function spy() {
-    var ids = ['profile', 'research', 'projects', 'lab', 'toolchain', 'teaching', 'journey', 'contact'];
     var links = $$('.pin, .topbar-links a');
+    /* derive the tracked sections from the nav itself, so this works unchanged
+       on both the portfolio and the lab page (cross-page links are ignored) */
+    var ids = [];
+    links.forEach(function (a) {
+      var h = a.getAttribute('href') || '';
+      if (h.charAt(0) === '#' && h.length > 1 && ids.indexOf(h.slice(1)) < 0) ids.push(h.slice(1));
+    });
     var bus = $('#bus');
     var bar = $('#progress');
     var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
@@ -153,14 +159,11 @@
     scan();
   })();
 
-  /* ------------------------------------------------ divider traces & journey */
+  /* -------------------------------------------- band seams & journey track */
   (function draws() {
-    $$('.divider').forEach(function (svg) {
-      var p = svg.querySelector('path');
-      if (p && p.getTotalLength) {
-        try { svg.style.setProperty('--len', Math.ceil(p.getTotalLength())); } catch (e) {}
-      }
-      onView(svg, function () { svg.classList.add('on'); }, 0.1);
+    /* each section's top rule inks itself in as the band is reached */
+    $$('.block').forEach(function (b) {
+      onView(b, function () { b.classList.add('on'); }, 0.03);
     });
     var track = $('.journey-track');
     if (track) onView(track, function () { track.style.setProperty('--draw', '100%'); }, 0.15);
@@ -190,6 +193,68 @@
         card.style.transform = 'perspective(900px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) translateY(-3px)';
       });
       card.addEventListener('pointerleave', function () { card.style.transform = ''; });
+    });
+  })();
+
+  /* ------------------------------------------ boot — power-on self test */
+  (function boot() {
+    var el = $('.boot');
+    if (!el) return;
+    if (reduce) { el.remove(); return; }
+
+    var log = $('.boot-log', el);
+    var lines = ['Power-on self test', 'Clock tree — locked', 'Metal stack — routed', 'Design rules — clean', 'Ready'];
+    var i = 0;
+    var t = setInterval(function () {
+      if (log) log.textContent = lines[i];
+      if (++i >= lines.length) clearInterval(t);
+    }, 300);
+
+    function clear() { clearInterval(t); if (el.parentNode) el.remove(); }
+    el.addEventListener('animationend', function (e) { if (e.target === el) clear(); });
+    /* belt and braces: the overlay must never outlive its own animation */
+    setTimeout(clear, 3000);
+  })();
+
+  /* ------------------------------------------------------- rotating role */
+  (function roles() {
+    var el = $('#hero-role');
+    if (!el || reduce) return;
+    var list = (el.getAttribute('data-roles') || '').split('|').filter(Boolean);
+    if (list.length < 2) return;
+    var i = 0;
+    setInterval(function () {
+      el.classList.add('swap');
+      setTimeout(function () {
+        i = (i + 1) % list.length;
+        el.textContent = list[i];
+        el.classList.remove('swap');
+      }, 300);
+    }, 3400);
+  })();
+
+  /* ------------------------------------------------------- back to top */
+  (function toTop() {
+    var b = $('#to-top');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+    var tick = false;
+    window.addEventListener('scroll', function () {
+      if (tick) return;
+      tick = true;
+      requestAnimationFrame(function () {
+        b.classList.toggle('on', window.scrollY > 620);
+        tick = false;
+      });
+    }, { passive: true });
+  })();
+
+  /* --------------------------------------------------------- GPA dials */
+  (function gpa() {
+    $$('.gpa').forEach(function (g) {
+      onView(g, function () { g.classList.add('on'); }, 0.4);
     });
   })();
 
@@ -484,8 +549,7 @@
 
   /* ---------------------------------------------------------- gate bench */
   (function gates() {
-    var stage = $('#gate-stage');
-    if (!stage) return;
+    if (!$('#g-body')) return;
 
     var SHAPES = {
       AND:  { body: 'M34 12 H62 A26 26 0 0 1 62 64 H34 Z',                     tip: 88, bub: false, xor: false },
@@ -557,8 +621,7 @@
 
   /* --------------------------------------- 4-bit counter + seven-segment */
   (function counter() {
-    var host = $('#count-stage');
-    if (!host) return;
+    if (!$('#seg-a')) return;
 
     /* segments a b c d e f g, indexed 0..15 for hexadecimal 0-F */
     var MAP = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc',
